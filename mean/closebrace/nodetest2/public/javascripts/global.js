@@ -99,7 +99,7 @@ function addUser(event) {
             'age': $('#addUser fieldset input#inputUserAge').val(),
             'location': $('#addUser fieldset input#inputUserLocation').val(),
             'gender': $('#addUser fieldset input#inputUserGender').val()
-        }
+        };
 
         // Use AJAX to post the object to our adduser service
         $.ajax({
@@ -170,5 +170,5 @@ function deleteUser(event) {
         return false;
 
     }
-
+ 
 };
