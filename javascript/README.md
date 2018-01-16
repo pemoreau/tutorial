@@ -87,4 +87,6 @@ Infinity
 
 * Symbol (new in ECMAScript 6)
 
+* Objects
+
 
