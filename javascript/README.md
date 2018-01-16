@@ -56,7 +56,7 @@ Infinity
    	* string primitives
    	
    	```js
-      	> String('foo') === 'foo'
+	> String('foo') === 'foo'
 	true
 	> typeof 'foo'
 	'string'
