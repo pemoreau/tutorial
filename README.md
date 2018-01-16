@@ -6,9 +6,9 @@
 Partie Frontend
 ===============
 
-#####HTML5 et CSS3
+##### HTML5 et CSS3
 
-#####Bootstrap
+##### Bootstrap
 développé par Twitter
 
 Framework côté client pour créer des interfaces attractives
@@ -23,15 +23,15 @@ jQuery is a fast, small, and feature-rich JavaScript library. It makes things li
 
 *alternatives* : knacss, blueprint, unsemantic, yui, bluetrip, ez-css, pure, gumby, materialize, foundation
 
-#####Angular
+##### Angular
 Full Framework développé par Google  
 Angular 4 repose sur l’utilisation de TypeScript (version typée de JS)
 
-#####React
+##### React
 Framework développé par Facebook  
 React is just a small view library 
 
-#####Vue
+##### Vue
 le plus facile à apprendre
 
 #####Elm
@@ -49,14 +49,14 @@ template engine pour HTML et JS
 Partie Backend
 ==============
 
-#####NodeJS
+##### NodeJS
 Serveur programmable en JS
 
-#####Express
+##### Express
 Express is a minimal and flexible Node.js web application framework  
 S’occupe du routing, des vues HTML, des sessions
 
-#####Flask Web Development
+##### Flask Web Development
 Developing Web Application With Python  
 Miguel Grinberg
 
