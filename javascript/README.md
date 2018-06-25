@@ -89,4 +89,28 @@ Infinity
 
 * Objects
 
+### Scope
+
+* `var` déclare une variable ("en début de fonction"). La portée est la fonction et non le block :
+
+	```js
+	f = function() {
+	  { var x = 3; }
+	  console.log(x);  // 3
+	}
+	```
+	
+* `let` déclare une variable locallement à un block :
+
+	```js
+	function f() {
+	  let x = 1;
+	  if (true) {
+	    let x = 2;
+	    console.log(x);  // 2
+	  }
+	  console.log(x);  // 1
+	}
+	```
+* `const` se comporte comme `let` mais définit une constante
 
