@@ -21,25 +21,14 @@ Template.selection.helpers({
 
         var set = new Set(res)
         res = [...set]
-        //res = res.map(function(a) {return a["brand"];});
 
-        // Meteor.call('frames.find', 'brand', function(error, result) {
-        //     if(error){
-        //         alert(‘Error’);
-        //     }else{
-        //         Session.set('brandlist', result);
-        //     }
-        // });
-        //
-        // var res = Session.get('brandlist');
         console.log("brands: " + res);
 
         return res;
     },
 
     models: function() {
-        var b = Session.get("selectedBrand")
-        var res = Frames.find({ brand:b }).fetch();
+        var res = Frames.find({ brand:Session.get("selectedBrand") }).fetch();
         res = res.map(function(a) {return a.model;});
         var set = new Set(res)
         res = [...set]
@@ -47,25 +36,20 @@ Template.selection.helpers({
         return res;
     },
 
-
-    // models: function() {
-    //     return ["m1", "m2", "m3"]
-    // },
-
     sizes: function() {
         //return ["S", "M", "L", "XL"]
-        var b = Session.get("selectedModel")
-        var res = Frames.find({ model:b }).fetch();
+        var res = Frames.find({ brand:Session.get("selectedBrand"), model:Session.get("selectedModel") }).fetch();
         res = res.map(function(a) {return a.size;});
         var set = new Set(res)
         res = [...set]
         //console.log("models: " + res);
         return res;
     },
+
     years: function() {
         //return ["2015", "2016", "2017", "2018"]
-        var b = Session.get("selectedSize")
-        var res = Frames.find({ size:b }).fetch();
+        var res = Frames.find({ brand:Session.get("selectedBrand"), model:Session.get("selectedModel"),
+                                size:Session.get("selectedSize") }).fetch();
         res = res.map(function(a) {return a.year;});
         var set = new Set(res)
         res = [...set]
@@ -96,4 +80,22 @@ Template.selection.events({
         console.log("selectedYear: " + selected);
         Session.set("selectedYear", selected);
     },
+});
+
+Template.run.helpers({
+
+});
+
+Template.run.events({
+    'click #run': function(e, tpl){
+        console.log('run comparator...');
+
+        Meteor.call('frames.find',
+            Session.get("selectedBrand"),
+            Session.get("selectedModel"),
+            Session.get("selectedSize"),
+            Session.get("selectedYear"));
+
+    },
+
 });
