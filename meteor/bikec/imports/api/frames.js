@@ -2,6 +2,8 @@ import { Meteor } from 'meteor/meteor';
 import { Mongo } from 'meteor/mongo';
 import {check} from "meteor/check";
 
+import './tools.js';
+
 export const Frames = new Mongo.Collection('frames');
 
 // Meteor.methods({
@@ -29,12 +31,17 @@ Meteor.methods({
         check(size, String);
         check(year, String);
 
-        var selectedBike = Frames.find({'brand':brand, 'model':model, 'size':size, 'year':year}).fetch();
+        var selectedBike = Frames.findOne({'brand':brand, 'model':model, 'size':size, 'year':year});
         console.log('selectedBike:');
         console.log(selectedBike);
 
         var bikes = Frames.find({}).fetch();
         //console.log(bikes);
+
+
+        const frame = new Frame(selectedBike);
+        console.log(frame.brand);
+
         return ;
     },
 
