@@ -1,0 +1,115 @@
+<head>
+  <title>todos2</title>
+</head>
+
+<body>
+  <h1>Welcome to Bike Comparator!</h1>
+
+  {{> description}}
+  {{> selection}}
+
+</body>
+
+
+<template name="description">
+    <h3>This web site will help you to find a bike similar to yours!</h3>
+</template>
+
+
+<template name="selection">
+    <h3>Select your bike</h3>
+
+    <div class="frame_panel-selections">
+        <form id="brand-form">
+            <select id="brand-select">
+                <option disabled="disabled" selected="selected">Select a Brand</option>
+                {{#each brands}}
+                    <option id="brand_selected" value="{{this}}">{{this}}</option>
+                {{/each}}
+            </select>
+        </form>
+
+        <form id="model-form">
+            <select id="model-select">
+                <option disabled="disabled" selected="selected">Select a Model</option>
+                {{#each models}}
+                    <option id="model_selected" value="{{this}}">{{this}}</option>
+                {{/each}}
+            </select>
+        </form>
+
+        <form id="size-form">
+            <select id="size-select">
+                <option disabled="disabled" selected="selected">Select a Size</option>
+                {{#each sizes}}
+                    <option id="size_selected" value="{{this}}">{{this}}</option>
+                {{/each}}
+            </select>
+        </form>
+
+        <form id="year-form">
+            <select id="year-select">
+                <option disabled="disabled" selected="selected">Select a Year</option>
+                {{#each years}}
+                    <option id="year_selected" value="{{this}}">{{this}}</option>
+                {{/each}}
+            </select>
+        </form>
+    </div>
+
+
+
+</template>
+
+
+
+<!--{{#dropdownTrigger name="brand"}}
+        <button>Select a brand</button>
+    {{/dropdownTrigger}}
+
+    {{#dropdownTrigger name="model"}}
+        <button>Select a model</button>
+    {{/dropdownTrigger}}
+
+    {{#dropdownTrigger name="size"}}
+        <button>Select a size</button>
+    {{/dropdownTrigger}}
+
+    {{#dropdownTrigger name="year"}}
+        <button>Select a year</button>
+    {{/dropdownTrigger}}
+
+    {{#dropdown name="brand" classes="dropdown--menu" align="left" persistent="true"}}
+        <ul class="dropdown__menu">
+            {{#each brands}}
+                <li role="menuItem"><a href="#">{{this}}</a></li>
+            {{/each}}
+        </ul>
+    {{/dropdown}}
+
+    {{#dropdown name="model" classes="dropdown--menu" align="left"}}
+
+        <ul class="dropdown__menu">
+            {{#each models}}
+                <li role="menuItem"><a href="#">{{this}}</a></li>
+            {{/each}}
+        </ul>
+    {{/dropdown}}
+
+    {{#dropdown name="size" classes="dropdown--menu" align="left"}}
+
+        <ul class="dropdown__menu">
+            {{#each sizes}}
+                <li role="menuItem"><a href="#">{{this}}</a></li>
+            {{/each}}
+        </ul>
+    {{/dropdown}}
+
+    {{#dropdown name="year" classes="dropdown--menu" align="left"}}
+
+        <ul class="dropdown__menu">
+            {{#each years}}
+                <li role="menuItem"><a href="#">{{this}}</a></li>
+            {{/each}}
+        </ul>
+    {{/dropdown}}-->
