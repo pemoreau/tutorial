@@ -7,20 +7,23 @@ import { Frames } from '../imports/api/frames.js';
 
 import './main.html';
 
+var findField = function(keys,field) {
+    var res = Frames.find(keys).fetch();
+    res = res.map(function(entry) {return entry[field];});
+    var set = new Set(res);
+    return [...set];
+};
+
 // client code goes here
 Template.selection.helpers({
-    // find: function(field) {
-    //     var res = Frames.find({}).fetch();
-    //     return res.map(function(entry) {return entry[field];});
-    // },
 
     brands: function() {
-        //var res = Frames.find({}, {brand:1, _id:0}).fetch();
-        var res = Frames.find({}).fetch();
-        res = res.map(function(a) {return a.brand;});
+        var res = findField({},'brand');
 
-        var set = new Set(res)
-        res = [...set]
+        // var res = Frames.find({}).fetch();
+        // res = res.map(function(a) {return a.brand;});
+        //var set = new Set(res)
+        // res = [...set]
 
         console.log("brands: " + res);
 
@@ -28,31 +31,24 @@ Template.selection.helpers({
     },
 
     models: function() {
-        var res = Frames.find({ brand:Session.get("selectedBrand") }).fetch();
-        res = res.map(function(a) {return a.model;});
-        var set = new Set(res)
-        res = [...set]
-        //console.log("models: " + res);
+        var res = findField({ brand:Session.get("selectedBrand") }, 'model');
+        console.log("models: " + res);
         return res;
     },
 
     sizes: function() {
         //return ["S", "M", "L", "XL"]
-        var res = Frames.find({ brand:Session.get("selectedBrand"), model:Session.get("selectedModel") }).fetch();
-        res = res.map(function(a) {return a.size;});
-        var set = new Set(res)
-        res = [...set]
-        //console.log("models: " + res);
+        var res = findField({ brand:Session.get("selectedBrand"),
+                              model:Session.get("selectedModel") }, 'size');
+        // //console.log("models: " + res);
         return res;
     },
 
     years: function() {
         //return ["2015", "2016", "2017", "2018"]
-        var res = Frames.find({ brand:Session.get("selectedBrand"), model:Session.get("selectedModel"),
-                                size:Session.get("selectedSize") }).fetch();
-        res = res.map(function(a) {return a.year;});
-        var set = new Set(res)
-        res = [...set]
+        var res = findField({ brand:Session.get("selectedBrand"),
+                              model:Session.get("selectedModel"),
+                              size:Session.get("selectedSize") }, 'year');
         //console.log("models: " + res);
         return res;
     },
