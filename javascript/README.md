@@ -53,37 +53,38 @@ Infinity
 ```
 
 * String
-   	* string primitives
-   	
-   	```js
-      	> String('foo') === 'foo'
-	true
-	> typeof 'foo'
-	'string'
-	> 'foo'.length
-	3
-	```
-   	* String objects
+  * string primitives
 
-   	```js
-   	> new String('foo') === 'foo'
-	false
-	> typeof new String('foo')
-	'object'
-	> new String('foo').toString() === 'foo'
-	true
-   	```
-   	
-	* template
+  ```js
+  > String('foo') === 'foo'
+  true
+  > typeof 'foo'
+  'string'
+  > 'foo'.length
+  3
+  ```
 
-	```js
-	var a = 5;
-	var b = 10;
-	console.log(`Fifteen is ${a + b} and
-	not ${2 * a + b}.`);
-	// "Fifteen is 15 and
-	// not 20."
-	```
+  * String objects
+
+  ```js
+  > new String('foo') === 'foo'
+  false
+  > typeof new String('foo')
+  'object'
+  > new String('foo').toString() === 'foo'
+  true
+  ```
+
+  * template
+
+  ```js
+  var a = 5;
+  var b = 10;
+  console.log(`Fifteen is ${a + b} and
+  not ${2 * a + b}.`);
+  // "Fifteen is 15 and
+  // not 20."
+  ```
 
 * Symbol (new in ECMAScript 6)
 
