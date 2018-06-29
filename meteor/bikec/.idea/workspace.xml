@@ -41,20 +41,20 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="tools.js" pinned="false" current-in-tab="true">
+      <file leaf-file-name="tools.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/imports/api/tools.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="377">
-              <caret line="50" column="35" selection-start-line="50" selection-start-column="35" selection-end-line="50" selection-end-column="35" />
+            <state relative-caret-position="120">
+              <caret line="8" column="2" lean-forward="true" selection-start-line="8" selection-start-column="2" selection-end-line="8" selection-end-column="2" />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="frames.js" pinned="false" current-in-tab="false">
+      <file leaf-file-name="frames.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/imports/api/frames.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="630">
-              <caret line="42" column="8" lean-forward="true" selection-start-line="42" selection-start-column="8" selection-end-line="42" selection-end-column="8" />
+            <state relative-caret-position="567">
+              <caret line="220" lean-forward="true" selection-start-line="78" selection-start-column="1" selection-end-line="220" />
               <folding>
                 <element signature="e#0#39#0" expanded="true" />
               </folding>
@@ -83,6 +83,8 @@
   <component name="FindInProjectRecents">
     <findStrings>
       <find>find</find>
+      <find>self</find>
+      <find>.pi</find>
     </findStrings>
   </component>
   <component name="IdeDocumentHistory">
@@ -94,8 +96,8 @@
         <option value="$PROJECT_DIR$/client/main.html" />
         <option value="$PROJECT_DIR$/server/main.js" />
         <option value="$PROJECT_DIR$/client/main.js" />
-        <option value="$PROJECT_DIR$/imports/api/frames.js" />
         <option value="$PROJECT_DIR$/imports/api/tools.js" />
+        <option value="$PROJECT_DIR$/imports/api/frames.js" />
       </list>
     </option>
   </component>
@@ -200,12 +202,12 @@
       <option name="presentableId" value="Default" />
       <updated>1530103006457</updated>
       <workItem from="1530103010679" duration="15447000" />
-      <workItem from="1530253007385" duration="9810000" />
+      <workItem from="1530253007385" duration="11418000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="25257000" />
+    <option name="totallyTimeSpent" value="26865000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="669" y="32" width="1234" height="1000" extended-state="0" />
@@ -316,20 +318,20 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/imports/api/frames.js">
+    <entry file="file://$PROJECT_DIR$/imports/api/tools.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="630">
-          <caret line="42" column="8" lean-forward="true" selection-start-line="42" selection-start-column="8" selection-end-line="42" selection-end-column="8" />
-          <folding>
-            <element signature="e#0#39#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="120">
+          <caret line="8" column="2" lean-forward="true" selection-start-line="8" selection-start-column="2" selection-end-line="8" selection-end-column="2" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/imports/api/tools.js">
+    <entry file="file://$PROJECT_DIR$/imports/api/frames.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="377">
-          <caret line="50" column="35" selection-start-line="50" selection-start-column="35" selection-end-line="50" selection-end-column="35" />
+        <state relative-caret-position="567">
+          <caret line="220" lean-forward="true" selection-start-line="78" selection-start-column="1" selection-end-line="220" />
+          <folding>
+            <element signature="e#0#39#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
