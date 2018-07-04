@@ -2,32 +2,22 @@ import { Meteor } from 'meteor/meteor';
 import { Mongo } from 'meteor/mongo';
 import {check} from "meteor/check";
 
-import './tools.js';
+import {distance, degre_to_alpha, radian_to_degre, check_equality, isUndefined, isDefined} from './tools.js';
 
 export const Frames = new Mongo.Collection('frames');
 
-// Meteor.methods({
-//     'frames.find'(field) {
-//         check(field, String);
-//         var res = Frames.find({}).fetch();
-//         console.log(res);
-//         console.log(field);
-//         res = res.map(function(entry) {return entry[field];});
-//         console.log(res);
-//         return ['a','b'];
-//     },
-//
-// });
-
-class _Frame {
+export class Frame {
     constructor(o) {
         //this.brand = o.brand;
-        for (var field in o){
+        for (var field in o) {
             if (o.hasOwnProperty(field) && field != '_id') {
-                if(o[field] == 'None') {
+                var v = parseFloat(o[field]);
+                if(o[field] == 'None' || o[field] == undefined) {
                     this[field] = undefined;
-                } else {
+                } else if (isNaN(v)) {
                     this[field] = o[field];
+                } else {
+                    this[field] = v;
                 }
                 //console.log("Key is " + field + ", value is " + o[field]);
             }
@@ -46,6 +36,7 @@ class _Frame {
         // extra data
         this.wheel_circumference = 211.0;
         this.wheel_diameter = this.wheel_circumference / Math.PI;
+        this.wheel_radius = this.wheel_diameter / 2;
         this.stem_length = 10.0;
         this.stem_angle = 80.0;  // degres
         this.stem_spacer = 3.5;  // total heigth of spacers
@@ -53,180 +44,221 @@ class _Frame {
         this.handlebar_diameter = 2.54;
         // steer_tube_diameter
 
+        this.o_x = 0.0;
+        this.o_y = 0.0;
+
         this.saddle_height = undefined;
         this.saddle_fore_aft = undefined;
 
     }
 
+    check_equality(name1, v1, name2, v2, threshold) {
+        if(Math.abs(v1 - v2) / Math.max(v1, v2) > threshold) {
+            return false;
+        }
+        return true;
+    }
+
+    geometry_to_string() {
+        var res = '' + this.brand + ', ' +
+            + this.model + ', ' +
+            + this.size + ', ' +
+            + this.yeaf + ', ' +
+            + this.virtual_seat_tube + ', ' +
+            + this.virtual_top_tube + ', ' +
+            + this.seat_tube + ', ' +
+            + this.top_tube + ', ' +
+            + 180.0 - this.head_tube_angle + ', ' +
+            + 180.0 - this.seat_tube_angle + ', ' +
+            + this.head_tube_angle + ', ' +
+            + this.chain_stay_length + ', ' +
+            + this.front_center + ', ' +
+            + this.wheelbase + ', ' +
+            + this.bottom_bracket_drop + ', ' +
+            + this.bracket_height + ', ' +
+            + this.stack + ', ' +
+            + this.reach + ', ' +
+            + this.crank_length;
+
+        return res;
+    }
+
+    /**
+     * compute a normal form for a bike
+     * @param saddle_height
+     * @param saddle_fore_aft
+     */
     compute_geometry(saddle_height, saddle_fore_aft) {
-        // compute crank_height : wheel_diameter/2 = crank_height + bottom_bracket_drop
-        if (this.saddle_height != undefined && this.bottom_bracket_drop != undefined) {
-            if (this.check_equality('wheel diameter', this.wheel_diameter, 'computed wheel diameter',
-                2 * (this.bracket_height + this.bottom_bracket_drop), 0.03) == False) {
-                console.log('crank_height and bottom_bracket_drop are not compatible');
+        this.saddle_height = saddle_height;
+        this.saddle_fore_aft = saddle_fore_aft;
+
+        // compute bracket_height : wheel_radius = bracket_height + bottom_bracket_drop
+        if (isDefined(this.bracket_height) && isDefined(this.bottom_bracket_drop)) {
+            if (! this.check_equality(
+                'wheel diameter', this.wheel_diameter,
+                'computed wheel diameter', 2 * (this.bracket_height + this.bottom_bracket_drop),
+                0.03)) {
+                console.log('bracket_height and bottom_bracket_drop are not compatible');
             }
-        } else if (this.bracket_height != undefined) {
-            this.bottom_bracket_drop = this.wheel_diameter / 2 - this.bracket_height;
-        } else if (this.bottom_bracket_drop != undefined) {
-            this.bracket_height = this.wheel_diameter / 2 - this.bottom_bracket_drop;
+        } else if (isDefined(this.bracket_height)) {
+            this.bottom_bracket_drop = this.wheel_radius - this.bracket_height;
+
+        } else if (isDefined(this.bottom_bracket_drop)) {
+            this.bracket_height = this.wheel_radius - this.bottom_bracket_drop;
+
         } else {
             console.log("cannot compute geometry");
             console.log("please give at least bracket_height or bottom_bracket_drop");
         }
 
-        // here, bracket_height, bottom_bracket_drop et rr sont connus
-
-        //     # centre roue arriere
-        //     # distance axe roue - axe pédalier au niveau du pedalier
-        //     self.RARx = self.Ox - math.sqrt(self.base_ar ** 2 - (self.rr - self.hp) ** 2)
-        //     self.RARy = self.rr - self.hp
-        //
-        //     # calcul de la position de la douille de direction
-        //     if self.reach is not None and self.stack is not None:
-        //         # cas : on connait le reach et le stack
-        //
-        //     # base potence
-        //     self.BPx = self.Ox + self.reach
-        //     self.BPy = self.Oy + self.stack
-        //
-        //     # base tube horizontal
-        //     self.BTHx = self.BPx - 4.25 * math.cos(degre_to_alpha(self.atdf))
-        //     self.BTHy = self.BPy - 4.25 * math.sin(degre_to_alpha(self.atdf))
-        //
-        //     # on en deduit hcv et lcv
-        //     self.htv = (self.BTHy - self.Oy) * math.sin(degre_to_alpha(self.atds))
-        //     self.HCVx = self.Ox + self.htv * math.cos(degre_to_alpha(self.atds))
-        //     self.HCVy = self.BTHy
-        //     self.lcv = self.BTHx - self.HCVx
-        //
-        //     #self.stack = self.BPy - self.Oy
-        //     #self.reach = self.BPx - self.Ox
-        //
-        //     elif self.hcv is not None and self.lcv is not None:
-        //         # cas : on connait la hauteur et la longueur virtuelle
-        //
-        //     # point virtuel ou le tube serait vraiment horizontal
-        //     self.HCVx = self.Ox + self.hcv * math.cos(degre_to_alpha(self.atds))
-        //     self.HCVy = self.Oy + self.hcv * math.sin(degre_to_alpha(self.atds))
-        //
-        //     # base tube horizontal
-        //     self.BTHx = self.HCVx + self.lcv
-        //     self.BTHy = self.HCVy
-        //
-        //
-        //     # base potence
-        //     self.BPx = self.BTHx + 3.77 * math.cos(degre_to_alpha(self.atdf))
-        //     self.BPy = self.BTHy + 3.77 * math.sin(degre_to_alpha(self.atdf))
-        //
-        //     # on en deduit stack et reach
-        //     self.stack = self.BPy - self.Oy
-        //     self.reach = self.BPx - self.Ox
-        //
-        //     #print("BTHy = %.2f BPy = %.2f stack = %.2f" % (self.BTHy, self.BPy, self.stack))
-        //
-        // else:
-        //     print("ne peut pas calculer la position de la douille de direction")
-        //     print("donner reach/stack ou longueur du tube horizontal et hauteur du cadre virtuel")
-        //     sys.exit()
-        //
-        //     # base fourche
-        //     self.BFx = self.BPx - self.hdd * math.cos(degre_to_alpha(self.atdf))
-        //     self.BFy = self.BPy - self.hdd * math.sin(degre_to_alpha(self.atdf))
-        //
-        //     # calcul de l'empattement : base_av**2 = dp**2 + ( empattement - base_ar*cos(asin(dp/base_ar)) )**2
-        //     if self.empattement is not None and self.base_av is not None:
-        //         empattement_calcule = math.sqrt(self.base_av ** 2 - self.dp ** 2) + self.base_ar * math.cos(
-        //             math.asin(self.dp / self.base_ar))
-        //     if not self.check_equality('empattement', self.empattement, 'empattement calculé', empattement_calcule, 0.01):
-        //     print("base avant et empattement incoherents")
-        //     elif self.base_av is not None:
-        //         self.empattement = math.sqrt(self.base_av ** 2 - self.dp ** 2) + self.base_ar * math.cos(
-        //             math.asin(self.dp / self.base_ar))
-        //     elif self.empattement is not None:
-        //         self.base_av = math.sqrt(
-        //             self.dp ** 2 + (self.empattement - self.base_ar * math.cos(math.asin(self.dp / self.base_ar))) ** 2)
-        //     elif self.deport is not None:
-        //         '''
-        //     Equations
-        //     RAVVx = BFx - l * math.cos(degre_to_alpha(atdf))
-        //     RAVVy = BFy - l * math.sin(degre_to_alpha(atdf))
-        //     RAVVy == rr - hp
-        //     RAVVx + self.deport = RAVx
-        //     '''
-        //     RAVVy = self.rr - self.hp
-        //     l = -(RAVVy - self.BFy) / math.sin(degre_to_alpha(self.atdf))
-        //     RAVVx = self.BFx - l * math.cos(degre_to_alpha(self.atdf))
-        //     self.RAVx = RAVVx + self.deport
-        //     self.RAVy = RAVVy
-        //     self.empattement = self.RAVx - self.RARx
-        //     self.base_av = math.sqrt(
-        //         self.dp ** 2 + (self.empattement - self.base_ar * math.cos(math.asin(self.dp / self.base_ar))) ** 2)
-        // else:
-        //     print("ne peut pas calculer la geometrie")
-        //     print("donner au moins l'empattement, la longueur de la base avant, ou le deport")
-        //     print(self.geometrie_to_string())
-        //     sys.exit()
-        //
-        //     # centre roue avant
-        //     # distance axe roue - axe pédalier au niveau du pedalier
-        //     self.RAVx = self.Ox + math.sqrt(self.base_av ** 2 - (self.rr - self.hp) ** 2)
-        //     self.RAVy = self.rr - self.hp
-        //
-        //     # print("axe roue arriere = (%.2f, %.2f) axe roue avant = (%.2f, %.2f)" % (self.RARx, self.RARy, self.RAVx, self.RAVy))
-        //
-        //     if self.deport is None:
-        //         # axe roue virtuel
-        //     # equation : self.RAVy = self.BFy - l * math.sin(degre_to_alpha(self.atdf))
-        //     l = -(self.RAVy - self.BFy) / math.sin(degre_to_alpha(self.atdf))
-        //     RAVVx = self.BFx - l * math.cos(degre_to_alpha(self.atdf))
-        //     self.deport = self.RAVx - RAVVx
-        //
-        //     if self.hc is not None:
-        //         # tube de selle - jusqu'au tube horizontal (peut etre slooping)
-        //     self.HCx = self.Ox + self.hc * math.cos(degre_to_alpha(self.atds))
-        //     self.HCy = self.Oy + self.hc * math.sin(degre_to_alpha(self.atds))
-        // else:
-        //     self.HCx = None
-        //     self.HCy = None
-        //
-        //
-        //     # base tube diagonal
-        //     self.BTDx = self.BFx + 4.25 * math.cos(degre_to_alpha(self.atdf))
-        //     self.BTDy = self.BFy + 4.25 * math.sin(degre_to_alpha(self.atdf))
-        //
-        //
-        //
-        //     # selle
-        //     #self.Sx = self.Ox + self.hs * math.cos(degre_to_alpha(self.atds))
-        //     self.Sx = self.Ox - self.rs
-        //     self.Sy = self.Oy + self.hs * math.sin(degre_to_alpha(self.atds))
-        //     self.STx = self.Ox + self.hs * math.cos(degre_to_alpha(self.atds)) # abscisse du tube de slle au niveau de la selle
-        //
-        //
-        //     # difference selle - base potence
-        //     self.drop = self.Sy - self.BPy
-        //
-        //
-        //     # axe pedale
-        //     alpha = 0.0
-        //     self.Px = self.Ox + self.lm * math.cos(alpha)
-        //     self.Py = self.Oy + self.lm * math.sin(alpha)
-        //
-        //     #calcul d'indicateurs
-        //     self.dsd = distance(self.Sx, self.Sy, self.BPx, self.BPy)
-        //     self.rapport_dsd_drop = self.dsd / self.drop
-        //     self.rapport_dsd_hs = self.dsd / self.hs
-        //     self.rapport_stack_reach = self.stack / self.reach
+        console.log('this.bracket_height = ' + this.bracket_height);
+        console.log('this.bottom_bracket_drop = ' + this.bottom_bracket_drop);
 
 
+        // here, bracket_height, bottom_bracket_drop and wheel_radius are known
 
+        //     center of rear wheel
+        //     distance between wheel axle  - crank axle, at crank's level
+        this.rear_wheel_x = this.o_x - Math.sqrt(this.chain_stay_length ** 2 - (this.wheel_radius - this.bracket_height) ** 2);
+        this.rear_wheel_y = this.wheel_radius - this.bracket_height;
+
+        // compute the position of the head set
+        if (isDefined(this.reach) && isDefined(this.stack)) {
+            // case: we know reach and stack
+            // stem base
+            this.stem_base_x = this.o_x + this.reach;
+            this.stem_base_y = this.o_y + this.stack;
+
+            // tube horizontal base
+            this.horizontal_tube_base_x = this.stem_base_x - 4.25 * Math.cos(degre_to_alpha(this.head_tube_angle));
+            this.horizontal_tube_base_y = this.stem_base_y - 4.25 * Math.sin(degre_to_alpha(this.head_tube_angle));
+
+            // we deduce virtual_seat_tube and virtual_top_tube
+            this.virtual_heel_height = (this.horizontal_tube_base_y - this.o_y) * Math.sin(degre_to_alpha(this.seat_tube_angle));
+            this.virtual_seat_tube_x = this.o_x + this.virtual_heel_height * Math.cos(degre_to_alpha(this.seat_tube_angle));
+            this.virtual_seat_tube_y = this.horizontal_tube_base_y;
+            this.virtual_top_tube = this.horizontal_tube_base_x - this.virtual_seat_tube_x;
+
+            //this.stack = this.stem_base_y - this.o_y
+            //this.reach = this.stem_base_x - this.o_x
+        } else if (isDefined(this.virtual_seat_tube) && isDefined(this.virtual_top_tube)) {
+            // case: we know virtual_seat_tube and virtual_top_tube
+
+            // virtual point where the tube would be really horizontal
+            this.virtual_seat_tube_x = this.o_x + this.virtual_seat_tube * Math.cos(degre_to_alpha(this.seat_tube_angle));
+            this.virtual_seat_tube_y = this.o_y + this.virtual_seat_tube * Math.sin(degre_to_alpha(this.seat_tube_angle));
+
+            //  horizontal tube base
+            this.horizontal_tube_base_x = this.virtual_seat_tube_x + this.virtual_top_tube;
+            this.horizontal_tube_base_y = this.virtual_seat_tube_y;
+
+            // stem base
+            this.stem_base_x = this.horizontal_tube_base_x + 3.77 * Math.cos(degre_to_alpha(this.head_tube_angle));
+            this.stem_base_y = this.horizontal_tube_base_y + 3.77 * Math.sin(degre_to_alpha(this.head_tube_angle));
+
+            // we deduce stack and reach
+            this.stack = this.stem_base_y - this.o_y;
+            this.reach = this.stem_base_x - this.o_x;
+
+            //print("BTHy = %.2f stem_base_y = %.2f stack = %.2f" % (this.horizontal_tube_base_y, this.stem_base_y, this.stack))
+        } else {
+            console.log("cannot compute head set position");
+            console.log("please give reach/stack or horizontal tube length and virtual seat tube height");
+        }
+
+        // fork base 
+        this.fork_base_x = this.stem_base_x - this.head_tube_length * Math.cos(degre_to_alpha(this.head_tube_angle));
+        this.fork_base_y = this.stem_base_y - this.head_tube_length * Math.sin(degre_to_alpha(this.head_tube_angle))
+        ;
+        // compute wheelbase: front_center**2 = bottom_bracket_drop**2 + ( wheelbase - chain_stay_length*cos(asin(bottom_bracket_drop/chain_stay_length)) )**2
+        if (isDefined(this.wheelbase) && isDefined(this.front_center)) {
+            var computed_wheelbase = Math.sqrt(this.front_center ** 2 - this.bottom_bracket_drop ** 2) + this.chain_stay_length * Math.cos(
+                Math.asin(this.bottom_bracket_drop / this.chain_stay_length));
+        }
+
+        if (!this.check_equality('wheelbase', this.wheelbase, 'computed_wheelbase', computed_wheelbase, 0.01)) {
+            console.log("front center and wheelbase are not compatible");
+        } else if (isDefined(this.front_center)) {
+            this.wheelbase = Math.sqrt(this.front_center ** 2 - this.bottom_bracket_drop ** 2) + this.chain_stay_length * Math.cos(
+                Math.asin(this.bottom_bracket_drop / this.chain_stay_length));
+        } else if (isDefined(this.wheelbase)) {
+            this.front_center = Math.sqrt(
+                this.bottom_bracket_drop ** 2 + (this.wheelbase - this.chain_stay_length * Math.cos(Math.asin(this.bottom_bracket_drop / this.chain_stay_length))) ** 2);
+        } else if (isDefined(this.fork_rate)) {
+            /*
+            Equations
+            virtual_front_wheel_x = BFx - l * Math.cos(degre_to_alpha(head_tube_angle))
+            virtual_front_wheel_y = BFy - l * Math.sin(degre_to_alpha(head_tube_angle))
+            virtual_front_wheel_y == rr - bracket_height
+            virtual_front_wheel_x + this.fork_rate = RAVx
+            */
+
+            var virtual_front_wheel_y = this.wheel_radius - this.bracket_height;
+            l = -(virtual_front_wheel_y - this.fork_base_y) / Math.sin(degre_to_alpha(this.head_tube_angle));
+            var virtual_front_wheel_x = this.fork_base_x - l * Math.cos(degre_to_alpha(this.head_tube_angle));
+            this.front_wheel_x = virtual_front_wheel_x + this.fork_rate;
+            this.front_wheel_y = virtual_front_wheel_y;
+            this.wheelbase = this.front_wheel_x - this.rear_wheel_x;
+            this.front_center = Math.sqrt(
+                this.bottom_bracket_drop ** 2 + (this.wheelbase - this.chain_stay_length * Math.cos(Math.asin(this.bottom_bracket_drop / this.chain_stay_length))) ** 2);
+        } else {
+            console.log("cannot compute geometry");
+            console.log("please give at least wheelbase, front base length or fork rate");
+            console.log(this.geometrie_to_string());
+        }
+
+
+        // centre roue avant
+        // distance axe roue - axe pédalier au niveau du pedalier
+        this.front_wheel_x = this.o_x + Math.sqrt(this.front_center ** 2 - (this.wheel_radius - this.bracket_height) ** 2);
+        this.front_wheel_y = this.wheel_radius - this.bracket_height;
+
+        // print("axe roue arriere = (%.2f, %.2f) axe roue avant = (%.2f, %.2f)" % (this.rear_wheel_x, this.rear_wheel_y, this.front_wheel_x, this.front_wheel_y))
+
+        if (isUndefined(this.fork_rate)) {
+            // virtual_front_wheel
+            // equation: this.front_wheel_y = this.fork_base_y - l * Math.sin(degre_to_alpha(this.head_tube_angle))
+            var l = -(this.front_wheel_y - this.fork_base_y) / Math.sin(degre_to_alpha(this.head_tube_angle));
+            var virtual_front_wheel_x = this.fork_base_x - l * Math.cos(degre_to_alpha(this.head_tube_angle));
+            this.fork_rate = this.front_wheel_x - virtual_front_wheel_x;
+        }
+
+        if (isDefined(this.seat_tube)) {
+            // tube de selle - jusqu'au tube horizontal (peut etre slooping)
+            this.seat_tube_x = this.o_x + this.seat_tube * Math.cos(degre_to_alpha(this.seat_tube_angle));
+            this.seat_tube_y = this.o_y + this.seat_tube * Math.sin(degre_to_alpha(this.seat_tube_angle));
+        } else {
+            this.seat_tube_x = undefined;
+            this.seat_tube_y = undefined;
+        }
+
+        // down tube base
+        this.down_tube_x = this.fork_base_x + 4.25 * Math.cos(degre_to_alpha(this.head_tube_angle));
+        this.down_tube_y = this.fork_base_y + 4.25 * Math.sin(degre_to_alpha(this.head_tube_angle));
+
+        // saddle
+        this.saddle_x = this.o_x - this.saddle_fore_aft;
+        this.saddle_y = this.o_y + this.saddle_height * Math.sin(degre_to_alpha(this.seat_tube_angle));
+        this.saddle_seat_tube_x = this.o_x + this.saddle_height * Math.cos(degre_to_alpha(this.seat_tube_angle)); // abscisse du tube de selle au niveau de la selle
+
+
+        // difference saddle - stem base
+        this.drop = this.saddle_y - this.stem_base_y;
+
+        // pedal axle 
+        var alpha = 0.0;
+        this.pedal_x = this.o_x + this.crank_length * Math.cos(alpha);
+        this.pedal_y = this.o_y + this.crank_length * Math.sin(alpha);
+        
+        // calcul d'indicateurs
+        this.saddle_stem_distance = distance(this.saddle_x, this.saddle_y, this.stem_base_x, this.stem_base_y);
+        this.ratio_saddle_stem_distance_drop = this.saddle_stem_distance / this.drop;
+        this.ratio_saddle_stem_distance_hs = this.saddle_stem_distance / this.saddle_height;
+        this.ratio_stack_reach = this.stack / this.reach;
 
     }
 
 }
-// make Frame global such that class _Frame is available in other modules
-Frame = _Frame;
-
 
 
 // TODO:
@@ -240,13 +272,14 @@ Meteor.methods({
         check(model, String);
         check(size, String);
         check(year, String);
+        console.log('find.frames started')
 
         var selectedBike = Frames.findOne({'brand':brand, 'model':model, 'size':size, 'year':year});
         console.log('selectedBike:');
         console.log(selectedBike);
 
         var bikes = Frames.find({}).fetch();
-        //console.log(bikes);
+        console.log('number of bikes in database: ' + bikes.length);
 
 
         const frame = new Frame(selectedBike);
@@ -255,6 +288,8 @@ Meteor.methods({
 
         frame.compute_geometry(saddle_height, saddle_fore_aft);
         console.log(frame);
+
+        console.log('find.frames finished')
 
         return ;
     },
