@@ -1,35 +1,32 @@
 export {distance, degre_to_alpha, radian_to_degre, check_equality, isUndefined, isDefined};
 
-var distance = function(x1, y1, x2, y2) {
-    return Math.sqrt((x1-x2) ** 2 + (y1-y2) ** 2);
+const distance = function (x1, y1, x2, y2) {
+    return Math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2);
 };
 
-var degre_to_alpha = function(d) {
-    var d = ((d % 360) + 360) % 360;
-    return (d/360.0)*2*Math.PI;
+const degre_to_alpha = function (d) {
+    d = ((d % 360) + 360) % 360;
+    return (d / 360.0) * 2 * Math.PI;
 };
 
-var radian_to_degre = function(r) {
-    var d = (r * 360.0) / (2 * Math.PI);
+const radian_to_degre = function (r) {
+    let d = (r * 360.0) / (2 * Math.PI);
     d = ((d % 360) + 360) % 360;
     return d;
 };
 
-var check_equality = function(name1, value1, name2, value2, eps=0.03) {
-    if((Math.abs(value1 - value2) / max(value1, value2)) > eps) {
+const check_equality = function (name1, value1, name2, value2, eps = 0.03) {
+    if ((Math.abs(value1 - value2) / Math.max(value1, value2)) > eps) {
         console.log(name1 + " = " + value1 + " " + name2 + " = " + value2);
-        return False;
+        return false;
     }
-    return True;
-}
+    return true;
+};
 
-var isUndefined = function(x) {
-    if (typeof x === "undefined") {
-        return true;
-    }
-    return false;
-}
+const isUndefined = function (x) {
+    return typeof x === "undefined";
+};
 
-var isDefined = function(x) {
-    return ! isUndefined(x);
-}
+const isDefined = function (x) {
+    return !isUndefined(x);
+};

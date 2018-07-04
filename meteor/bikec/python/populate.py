@@ -35,6 +35,7 @@ translate['stack'] = 'stack'
 translate['reach'] = 'reach'
 translate['lm'] = 'crank_length'
 translate['deport'] = 'fork_rate'
+translate['htv'] = 'virtual_heel_height'
 
 
 def from_csv(filename):

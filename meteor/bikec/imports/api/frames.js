@@ -9,27 +9,29 @@ export const Frames = new Mongo.Collection('frames');
 export class Frame {
     constructor(o) {
         //this.brand = o.brand;
-        for (var field in o) {
-            if (o.hasOwnProperty(field) && field != '_id') {
-                var v = parseFloat(o[field]);
-                if(o[field] == 'None' || o[field] == undefined) {
+        for (const field in o) {
+            if (o.hasOwnProperty(field)) {
+                if(o[field] === 'None' || isUndefined(o[field])) {
                     this[field] = undefined;
-                } else if (isNaN(v)) {
-                    this[field] = o[field];
                 } else {
-                    this[field] = v;
+                    const v = parseFloat(o[field]);
+                    if (isNaN(v)) {
+                        this[field] = o[field];
+                    } else {
+                        this[field] = v;
+                    }
                 }
                 //console.log("Key is " + field + ", value is " + o[field]);
             }
         }
 
-        if(this.head_tube_angle != undefined) {
+        if(isDefined(this.head_tube_angle)) {
             this.head_tube_angle = 180.0 - this.head_tube_angle;
         }
-        if(this.seat_tube_angle != undefined) {
+        if(isDefined(this.seat_tube_angle)) {
             this.seat_tube_angle = 180.0 - this.seat_tube_angle;
         }
-        if(this.crank_length == undefined) {
+        if(isUndefined(this.crank_length)) {
             this.crank_length = 17.25; // 172.5mm
         }
 
@@ -53,14 +55,11 @@ export class Frame {
     }
 
     check_equality(name1, v1, name2, v2, threshold) {
-        if(Math.abs(v1 - v2) / Math.max(v1, v2) > threshold) {
-            return false;
-        }
-        return true;
+        return Math.abs(v1 - v2) / Math.max(v1, v2) <= threshold;
     }
 
     geometry_to_string() {
-        var res = '' + this.brand + ', ' +
+        const res = '' + this.brand + ', ' +
             + this.model + ', ' +
             + this.size + ', ' +
             + this.yeaf + ', ' +
@@ -99,6 +98,7 @@ export class Frame {
                 'computed wheel diameter', 2 * (this.bracket_height + this.bottom_bracket_drop),
                 0.03)) {
                 console.log('bracket_height and bottom_bracket_drop are not compatible');
+                console.log(this);
             }
         } else if (isDefined(this.bracket_height)) {
             this.bottom_bracket_drop = this.wheel_radius - this.bracket_height;
@@ -110,10 +110,6 @@ export class Frame {
             console.log("cannot compute geometry");
             console.log("please give at least bracket_height or bottom_bracket_drop");
         }
-
-        console.log('this.bracket_height = ' + this.bracket_height);
-        console.log('this.bottom_bracket_drop = ' + this.bottom_bracket_drop);
-
 
         // here, bracket_height, bottom_bracket_drop and wheel_radius are known
 
@@ -172,12 +168,11 @@ export class Frame {
         ;
         // compute wheelbase: front_center**2 = bottom_bracket_drop**2 + ( wheelbase - chain_stay_length*cos(asin(bottom_bracket_drop/chain_stay_length)) )**2
         if (isDefined(this.wheelbase) && isDefined(this.front_center)) {
-            var computed_wheelbase = Math.sqrt(this.front_center ** 2 - this.bottom_bracket_drop ** 2) + this.chain_stay_length * Math.cos(
-                Math.asin(this.bottom_bracket_drop / this.chain_stay_length));
-        }
-
-        if (!this.check_equality('wheelbase', this.wheelbase, 'computed_wheelbase', computed_wheelbase, 0.01)) {
-            console.log("front center and wheelbase are not compatible");
+            const computed_wheelbase = Math.sqrt(this.front_center ** 2 - this.bottom_bracket_drop ** 2) +
+                this.chain_stay_length * Math.cos(Math.asin(this.bottom_bracket_drop / this.chain_stay_length));
+            if (!this.check_equality('wheelbase', this.wheelbase, 'computed_wheelbase', computed_wheelbase, 0.01)) {
+                console.log("front center and wheelbase are not compatible");
+            }
         } else if (isDefined(this.front_center)) {
             this.wheelbase = Math.sqrt(this.front_center ** 2 - this.bottom_bracket_drop ** 2) + this.chain_stay_length * Math.cos(
                 Math.asin(this.bottom_bracket_drop / this.chain_stay_length));
@@ -189,13 +184,13 @@ export class Frame {
             Equations
             virtual_front_wheel_x = BFx - l * Math.cos(degre_to_alpha(head_tube_angle))
             virtual_front_wheel_y = BFy - l * Math.sin(degre_to_alpha(head_tube_angle))
-            virtual_front_wheel_y == rr - bracket_height
+            virtual_front_wheel_y === rr - bracket_height
             virtual_front_wheel_x + this.fork_rate = RAVx
             */
 
-            var virtual_front_wheel_y = this.wheel_radius - this.bracket_height;
-            l = -(virtual_front_wheel_y - this.fork_base_y) / Math.sin(degre_to_alpha(this.head_tube_angle));
-            var virtual_front_wheel_x = this.fork_base_x - l * Math.cos(degre_to_alpha(this.head_tube_angle));
+            let virtual_front_wheel_y = this.wheel_radius - this.bracket_height;
+            let l = -(virtual_front_wheel_y - this.fork_base_y) / Math.sin(degre_to_alpha(this.head_tube_angle));
+            let virtual_front_wheel_x = this.fork_base_x - l * Math.cos(degre_to_alpha(this.head_tube_angle));
             this.front_wheel_x = virtual_front_wheel_x + this.fork_rate;
             this.front_wheel_y = virtual_front_wheel_y;
             this.wheelbase = this.front_wheel_x - this.rear_wheel_x;
@@ -204,7 +199,7 @@ export class Frame {
         } else {
             console.log("cannot compute geometry");
             console.log("please give at least wheelbase, front base length or fork rate");
-            console.log(this.geometrie_to_string());
+            console.log(this.geometry_to_string());
         }
 
 
@@ -218,8 +213,8 @@ export class Frame {
         if (isUndefined(this.fork_rate)) {
             // virtual_front_wheel
             // equation: this.front_wheel_y = this.fork_base_y - l * Math.sin(degre_to_alpha(this.head_tube_angle))
-            var l = -(this.front_wheel_y - this.fork_base_y) / Math.sin(degre_to_alpha(this.head_tube_angle));
-            var virtual_front_wheel_x = this.fork_base_x - l * Math.cos(degre_to_alpha(this.head_tube_angle));
+            let l = -(this.front_wheel_y - this.fork_base_y) / Math.sin(degre_to_alpha(this.head_tube_angle));
+            let virtual_front_wheel_x = this.fork_base_x - l * Math.cos(degre_to_alpha(this.head_tube_angle));
             this.fork_rate = this.front_wheel_x - virtual_front_wheel_x;
         }
 
@@ -246,7 +241,7 @@ export class Frame {
         this.drop = this.saddle_y - this.stem_base_y;
 
         // pedal axle 
-        var alpha = 0.0;
+        let alpha = 0.0;
         this.pedal_x = this.o_x + this.crank_length * Math.cos(alpha);
         this.pedal_y = this.o_y + this.crank_length * Math.sin(alpha);
         
@@ -272,26 +267,42 @@ Meteor.methods({
         check(model, String);
         check(size, String);
         check(year, String);
-        console.log('find.frames started')
-
-        var selectedBike = Frames.findOne({'brand':brand, 'model':model, 'size':size, 'year':year});
-        console.log('selectedBike:');
-        console.log(selectedBike);
-
-        var bikes = Frames.find({}).fetch();
-        console.log('number of bikes in database: ' + bikes.length);
+        console.log('find.frames started');
 
 
-        const frame = new Frame(selectedBike);
-        var saddle_height = 74.5;
-        var saddle_fore_aft = 20.5;
 
-        frame.compute_geometry(saddle_height, saddle_fore_aft);
-        console.log(frame);
+        /**
+         * for a given saddle_height and saddle_fore_aft
+         * compute once the geometry of each frame of the database
+         * this should be done in background when the user enters saddle_height and saddle_fore_aft
+         */
+        const frame_list = [];
+        const saddle_height = 74.5;
+        const saddle_fore_aft = 20.5;
 
-        console.log('find.frames finished')
+        const frame_database = Frames.find({});
+        frame_database.forEach((f) => {
+            const frame = new Frame(f);
+            frame.compute_geometry(saddle_height, saddle_fore_aft);
+            frame_list.push(frame);
+        });
+        console.log('number of bikes in frame_list: ' + frame_list.length);
 
-        return ;
+        /**
+         * retrieve the selected frame
+         * warning: fields of the database (String) have been converted into String, float, undefined, etc.
+         */
+        const selectedFrame = Frames.findOne({'brand':brand, 'model':model, 'size':size, 'year':year});
+        const user_frame = frame_list.find(function(f) {
+            return f._id === selectedFrame._id; // each object has the same _id as entries of the database
+        });
+        console.log('user_frame:');
+        console.log(user_frame);
+
+
+
+        console.log('find.frames finished');
+
     },
 
 });

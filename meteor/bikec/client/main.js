@@ -1,6 +1,8 @@
 import { Template } from 'meteor/templating';
 import { Frames } from '../imports/api/frames.js';
-import { UiState} from '../imports/ui/ui-state.js';
+import { UiState } from '../imports/ui/ui-state.js';
+
+import { isUndefined } from '../imports/api/tools.js';
 
 import './main.html';
 
@@ -11,12 +13,10 @@ import './main.html';
  * example: findField({ brand:'Time' }, 'model')
  * returns a list of 'model' (each model appears only once) for the brand 'Time'
  */
-var findField = function(keys,field) {
+const findField = function(keys,field) {
     //console.log("findField keys=" + keys + " field=" + field);
-
-    var res = Frames.find(keys).fetch();
-    res = res.map(function(entry) {return entry[field];});
-    var set = new Set(res);
+    const res = Frames.find(keys).map(function(entry) {return entry[field];});
+    const set = new Set(res);
     return [...set];
 };
 
@@ -25,33 +25,33 @@ var findField = function(keys,field) {
  * such as selectedBrand, selectedModel, etc.
  * @type {UiState}
  */
-var uiState = new UiState();
+const uiState = new UiState();
 
 // client code goes here
 Template.selection.helpers({
 
     brands: function() {
-        var res = findField({},'brand');
+        const res = findField({},'brand');
         //console.log("brands: " + res);
         return res;
     },
 
     models: function() {
 
-        var res = findField({ brand:uiState.getBrand() }, 'model');
+        const res = findField({ brand:uiState.getBrand() }, 'model');
         //console.log("models: " + res);
         return res;
     },
 
     sizes: function() {
-        var res = findField({ brand:uiState.getBrand(),
+        const res = findField({ brand:uiState.getBrand(),
                               model:uiState.getModel() }, 'size');
         // //console.log("models: " + res);
         return res;
     },
 
     years: function() {
-        var res = findField({ brand:uiState.getBrand(),
+        const res = findField({ brand:uiState.getBrand(),
                               model:uiState.getModel(),
                               size:uiState.getSize() }, 'year');
         //console.log("models: " + res);
@@ -62,22 +62,22 @@ Template.selection.helpers({
 
 Template.selection.events({
     "change #brand-select": function (event, template) {
-        var selected = event.target.value;
+        const selected = event.target.value;
         uiState.setBrand(selected);
         console.log("selectedBrand: " + uiState.getBrand());
     },
     "change #model-select": function (event, template) {
-        var selected = event.target.value;
+        const selected = event.target.value;
         uiState.setModel(selected);
         console.log("selectedModel: " + uiState.getModel());
     },
     "change #size-select": function (event, template) {
-        var selected = event.target.value;
+        const selected = event.target.value;
         uiState.setSize(selected);
         console.log("selectedSize: " + uiState.getSize());
     },
     "change #year-select": function (event, template) {
-        var selected = event.target.value;
+        const selected = event.target.value;
         uiState.setYear(selected);
         console.log("selectedYear: " + uiState.getYear());
     },
@@ -97,7 +97,7 @@ Template.run.events({
             uiState.getSize(),
             uiState.getYear());
 
-        if(uiState.getBrand() == undefined && uiState.getModel() == undefined && uiState.getSize() == undefined && uiState.getYear() == undefined) {
+        if(isUndefined(uiState.getBrand()) && isUndefined(uiState.getModel()) && isUndefined(uiState.getSize()) && isUndefined(uiState.getYear())) {
             uiState.setBrand('Time');
             uiState.setModel('NXR');
             uiState.setSize('M');
