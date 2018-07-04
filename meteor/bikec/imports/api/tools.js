@@ -1,6 +1,6 @@
-export {distance, degre_to_alpha, radian_to_degre, check_equality, isUndefined, isDefined};
+export {point_distance, degre_to_alpha, radian_to_degre, check_equality, isUndefined, isDefined, float2};
 
-const distance = function (x1, y1, x2, y2) {
+const point_distance = function (x1, y1, x2, y2) {
     return Math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2);
 };
 
@@ -23,6 +23,9 @@ const check_equality = function (name1, value1, name2, value2, eps = 0.03) {
     return true;
 };
 
+/**
+ * check if x is undefined (recommended way)
+ */
 const isUndefined = function (x) {
     return typeof x === "undefined";
 };
@@ -30,3 +33,7 @@ const isUndefined = function (x) {
 const isDefined = function (x) {
     return !isUndefined(x);
 };
+
+const float2 = function(x) {
+    return Math.floor(x*100)/100;
+}

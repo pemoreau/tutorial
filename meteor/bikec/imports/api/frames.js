@@ -1,26 +1,29 @@
 import { Meteor } from 'meteor/meteor';
 import { Mongo } from 'meteor/mongo';
-import {check} from "meteor/check";
+import { check } from "meteor/check";
 
-import {distance, degre_to_alpha, radian_to_degre, check_equality, isUndefined, isDefined} from './tools.js';
+import {point_distance, degre_to_alpha, radian_to_degre, check_equality, isUndefined, isDefined, float2} from './tools.js';
 
 export const Frames = new Mongo.Collection('frames');
+
+const convert_field = function(field) {
+    if(field === 'None' || isUndefined(field)) {
+        return undefined;
+    } else {
+        const v = parseFloat(field);
+        if (!isNaN(v)) {
+            return v;
+        }
+    }
+    return field;
+};
 
 export class Frame {
     constructor(o) {
         //this.brand = o.brand;
         for (const field in o) {
             if (o.hasOwnProperty(field)) {
-                if(o[field] === 'None' || isUndefined(o[field])) {
-                    this[field] = undefined;
-                } else {
-                    const v = parseFloat(o[field]);
-                    if (isNaN(v)) {
-                        this[field] = o[field];
-                    } else {
-                        this[field] = v;
-                    }
-                }
+                this[field] = convert_field(o[field]);
                 //console.log("Key is " + field + ", value is " + o[field]);
             }
         }
@@ -59,27 +62,59 @@ export class Frame {
     }
 
     geometry_to_string() {
-        const res = '' + this.brand + ', ' +
-            + this.model + ', ' +
+        return ''
+            + this.brand + ', ' +
+            // + this.model + ', ' +
             + this.size + ', ' +
-            + this.yeaf + ', ' +
-            + this.virtual_seat_tube + ', ' +
-            + this.virtual_top_tube + ', ' +
-            + this.seat_tube + ', ' +
-            + this.top_tube + ', ' +
-            + 180.0 - this.head_tube_angle + ', ' +
-            + 180.0 - this.seat_tube_angle + ', ' +
-            + this.head_tube_angle + ', ' +
-            + this.chain_stay_length + ', ' +
-            + this.front_center + ', ' +
-            + this.wheelbase + ', ' +
-            + this.bottom_bracket_drop + ', ' +
-            + this.bracket_height + ', ' +
-            + this.stack + ', ' +
-            + this.reach + ', ' +
-            + this.crank_length;
+            // + this.year + ', ' +
+            // + this.virtual_seat_tube + ', ' +
+            // + this.virtual_top_tube + ', ' +
+            // + this.seat_tube + ', ' +
+            // + this.top_tube + ', ' +
+            // + 180.0 - this.head_tube_angle + ', ' +
+            // + 180.0 - this.seat_tube_angle + ', ' +
+            // + this.head_tube_angle + ', ' +
+            // + this.chain_stay_length + ', ' +
+            // + this.front_center + ', ' +
+            // + this.wheelbase + ', ' +
+            // + this.bottom_bracket_drop + ', ' +
+            // + this.bracket_height + ', ' +
+            // + this.stack + ', ' +
+            // + this.reach + ', ' +
+            // + this.crank_length;
+'';
+    }
 
-        return res;
+    display() {
+        console.log('%s %s size %s:', this.brand, this.model, this.size);
+
+        console.log("stack/reach = %f mean = %f stack/reach normalised = %f/10.0 ",
+            float2(this.ratio_stack_reach), float2(this.ratio_stack_reach_moy), float2(this.ratio_stack_reach_normal));
+
+        console.log("saddle height /ground = %f head set/ground = %f",
+            float2(this.saddle_y + this.bracket_height), float2(this.stem_base_y + this.bracket_height));
+
+        console.log("drop = %f", float2(this.drop));
+
+        const dsd = point_distance(this.saddle_x, this.saddle_y, this.stem_base_x, this.stem_base_y);
+
+        console.log("distance saddle-head set = %f", float2(dsd));
+
+        console.log("wheelbase = %f fork_rate = %f", float2(this.wheelbase), float2(this.fork_rate));
+
+        console.log("dsd/drop = %f mean = %f dsd/drop normalised = %f/10.0 ",
+            float2(this.ratio_dsd_drop), float2(this.ratio_dsd_drop_moy), float2(this.ratio_dsd_drop_normal));
+
+        console.log("dsd/hs   = %f mean = %f dsd/hs   normalised = %f/10.0 ",
+            float2(this.ratio_dsd_saddle_height), float2(this.ratio_dsd_saddle_height_moy), float2(this.ratio_dsd_saddle_height_normal));
+
+        const dst = this.saddle_x - this.saddle_seat_tube_x;
+        if (dst >= 0) {
+            console.log("creux de selle avancé de %fcm par ratio à l'axe du tube de selle", float2(dst));
+        } else {
+            console.log("creux de selle reculé de %fcm par ratio à l'axe du tube de selle", float2(-dst));
+            console.log("hauteur pedalier = %f difference pedalier - axe roue = %f", float2(this.bracket_height), float2(this.bottom_bracket_drop));
+        }
     }
 
     /**
@@ -156,7 +191,7 @@ export class Frame {
             this.stack = this.stem_base_y - this.o_y;
             this.reach = this.stem_base_x - this.o_x;
 
-            //print("BTHy = %.2f stem_base_y = %.2f stack = %.2f" % (this.horizontal_tube_base_y, this.stem_base_y, this.stack))
+            //console.log("BTHy = %.2f stem_base_y = %.2f stack = %.2f" % (this.horizontal_tube_base_y, this.stem_base_y, this.stack))
         } else {
             console.log("cannot compute head set position");
             console.log("please give reach/stack or horizontal tube length and virtual seat tube height");
@@ -208,7 +243,7 @@ export class Frame {
         this.front_wheel_x = this.o_x + Math.sqrt(this.front_center ** 2 - (this.wheel_radius - this.bracket_height) ** 2);
         this.front_wheel_y = this.wheel_radius - this.bracket_height;
 
-        // print("axe roue arriere = (%.2f, %.2f) axe roue avant = (%.2f, %.2f)" % (this.rear_wheel_x, this.rear_wheel_y, this.front_wheel_x, this.front_wheel_y))
+        // console.log("axe roue arriere = (%.2f, %.2f) axe roue avant = (%.2f, %.2f)" % (this.rear_wheel_x, this.rear_wheel_y, this.front_wheel_x, this.front_wheel_y))
 
         if (isUndefined(this.fork_rate)) {
             // virtual_front_wheel
@@ -246,15 +281,120 @@ export class Frame {
         this.pedal_y = this.o_y + this.crank_length * Math.sin(alpha);
         
         // calcul d'indicateurs
-        this.saddle_stem_distance = distance(this.saddle_x, this.saddle_y, this.stem_base_x, this.stem_base_y);
+        this.saddle_stem_distance = point_distance(this.saddle_x, this.saddle_y, this.stem_base_x, this.stem_base_y);
         this.ratio_saddle_stem_distance_drop = this.saddle_stem_distance / this.drop;
-        this.ratio_saddle_stem_distance_hs = this.saddle_stem_distance / this.saddle_height;
+        this.ratio_saddle_stem_distance_saddle_height = this.saddle_stem_distance / this.saddle_height;
         this.ratio_stack_reach = this.stack / this.reach;
 
     }
 
 }
 
+
+
+const frame_distance= function(frame1, frame2, dsd='', drop='', ratio_dsd_drop='', deport=undefined) {
+    let res = 0.0;
+    const dsd1 = point_distance(frame1.saddle_x, frame1.saddle_y, frame1.stem_base_x, frame1.stem_base_y);
+    const dsd2 = point_distance(frame2.saddle_x, frame2.saddle_y, frame2.stem_base_x, frame2.stem_base_y);
+
+    const delta_dsd = dsd2 - dsd1;
+    const delta_drop = frame2.drop - frame1.drop;
+    const delta_ratio_dsd_drop = (dsd2/frame2.drop) - (dsd1/frame1.drop);
+    const delta_deport = frame2.fork_rate - frame1.fork_rate;
+
+    const args = [dsd, drop, ratio_dsd_drop, deport];
+    const deltas = [delta_dsd, delta_drop, delta_ratio_dsd_drop, delta_deport];
+
+    let max = 1000.0;
+    const len = args.length;
+    for (let i = 0 ; i<len && res < max ; i++) {
+        if (isUndefined(args[i])) {
+            // do nothing
+        } else if (args[i] === '') {
+            res += deltas[i] ** 2;
+        } else if (args[i] === '+') {
+            if (deltas[i] >= 0.0) {
+                res += deltas[i] ** 2;
+            } else {
+                res = max;
+            }
+        } else if (args[i] === '-') {
+            if (deltas[i] <= 0.0) {
+                res += deltas[i] ** 2;
+            } else {
+                res = max;
+            }
+        } else if (args[i] === '=') {
+            if (deltas[i] !== 0.0) {
+                res += deltas[i] ** 2;
+            } else {
+                res = max;
+            }
+        }
+    }
+    return Math.sqrt(res)
+};
+
+const top_frame = function(frame_list, frame, hs, rs, dsd='', drop='-', ratio_dsd_drop='', fork_rate=undefined) {
+    const l = [];
+    for (f of frame_list) {
+        l.push({frame:f, distance:frame_distance(frame, f, dsd, drop, ratio_dsd_drop, fork_rate)});
+    }
+
+    l.sort(function (pair1,pair2) {
+        return pair1.distance - pair2.distance;
+    });
+    return l
+};
+
+const compute_extra_information = function(frame_list, saddle_height, saddle_fore_aft) {
+    min_ratio_stack_reach = 10.0;
+    min_ratio_dsd_drop = 10.0;
+    min_ratio_dsd_saddle_height = 10.0;
+    max_ratio_stack_reach = 0.0;
+    max_ratio_dsd_drop = 0.0;
+    max_ratio_dsd_saddle_height = 0.0;
+    sum_ratio_stack_reach = 0.0;
+    sum_ratio_dsd_drop = 0.0;
+    sum_ratio_dsd_saddle_height = 0.0;
+    for(const frame of frame_list) {
+        // print(frame.geometrie_to_string())
+        frame.compute_geometry(saddle_height, saddle_fore_aft);
+
+        sum_ratio_stack_reach += frame.ratio_stack_reach;
+        if (frame.ratio_stack_reach > max_ratio_stack_reach) {
+            max_ratio_stack_reach = frame.ratio_stack_reach;
+        } else if (frame.ratio_stack_reach < min_ratio_stack_reach) {
+            min_ratio_stack_reach = frame.ratio_stack_reach;
+        }
+
+        sum_ratio_dsd_drop += frame.ratio_dsd_drop;
+        if (frame.ratio_dsd_drop > max_ratio_dsd_drop) {
+            max_ratio_dsd_drop = frame.ratio_dsd_drop;
+        } else if (frame.ratio_dsd_drop < min_ratio_dsd_drop) {
+            min_ratio_dsd_drop = frame.ratio_dsd_drop;
+        }
+
+        sum_ratio_dsd_saddle_height += frame.ratio_dsd_saddle_height;
+        if (frame.ratio_dsd_saddle_height > max_ratio_dsd_saddle_height) {
+            max_ratio_dsd_saddle_height = frame.ratio_dsd_saddle_height;
+        } else if (frame.ratio_dsd_saddle_height < min_ratio_dsd_saddle_height) {
+            min_ratio_dsd_saddle_height = frame.ratio_dsd_saddle_height;
+        }
+    }
+
+    const len = frame_list.length;
+    for(const frame of frame_list) {
+        frame.ratio_stack_reach_moy = sum_ratio_stack_reach / len;
+        frame.ratio_stack_reach_normal = 10.0 * (frame.ratio_stack_reach - min_ratio_stack_reach) / (max_ratio_stack_reach - min_ratio_stack_reach);
+
+        frame.ratio_dsd_drop_moy = sum_ratio_dsd_drop / len;
+        frame.ratio_dsd_drop_normal = 10.0 * (frame.ratio_dsd_drop - min_ratio_dsd_drop) / (max_ratio_dsd_drop - min_ratio_dsd_drop);
+
+        frame.ratio_dsd_saddle_height_moy = sum_ratio_dsd_saddle_height / len;
+        frame.ratio_dsd_saddle_height_normal = 10.0 * (frame.ratio_dsd_saddle_height - min_ratio_dsd_saddle_height) / (max_ratio_dsd_saddle_height - min_ratio_dsd_saddle_height);
+    }
+};
 
 // TODO:
 // detect selection of user's bike (brand,model,size,year)
@@ -270,7 +410,6 @@ Meteor.methods({
         console.log('find.frames started');
 
 
-
         /**
          * for a given saddle_height and saddle_fore_aft
          * compute once the geometry of each frame of the database
@@ -283,24 +422,42 @@ Meteor.methods({
         const frame_database = Frames.find({});
         frame_database.forEach((f) => {
             const frame = new Frame(f);
-            frame.compute_geometry(saddle_height, saddle_fore_aft);
+            // frame.compute_geometry(saddle_height, saddle_fore_aft);
             frame_list.push(frame);
         });
+        
+        compute_extra_information(frame_list, saddle_height, saddle_fore_aft);
         console.log('number of bikes in frame_list: ' + frame_list.length);
 
         /**
          * retrieve the selected frame
          * warning: fields of the database (String) have been converted into String, float, undefined, etc.
          */
-        const selectedFrame = Frames.findOne({'brand':brand, 'model':model, 'size':size, 'year':year});
-        const user_frame = frame_list.find(function(f) {
+        const selectedFrame = Frames.findOne({'brand': brand, 'model': model, 'size': size, 'year': year});
+        const user_frame = frame_list.find(function (f) {
             return f._id === selectedFrame._id; // each object has the same _id as entries of the database
         });
-        console.log('user_frame:');
-        console.log(user_frame);
 
+        if (isDefined(user_frame)) {
+            // console.log('user_frame:');
+             console.log(user_frame);
 
+            // console.log('geometry: ' + user_frame.geometry_to_string());
 
+            const res = top_frame(frame_list, user_frame, saddle_height, saddle_fore_aft, '', '', '', undefined);
+            const number = 20;
+            console.log('Top ' + number);
+            for (let i = 0; i < number; i++) {
+                let f = res[i].frame;
+                console.log('%s.  %s %s %s (%f)', i+1, f.brand, f.model, f.size, res[i].distance);
+            }
+
+            for (let i = 0; i < number; i++) {
+                console.log('\ndistance = %f', float2(res[i].distance));
+                res[i].frame.display();
+            }
+
+        }
         console.log('find.frames finished');
 
     },
