@@ -1,6 +1,7 @@
 import { Meteor } from 'meteor/meteor';
 import { Mongo } from 'meteor/mongo';
 import { check } from "meteor/check";
+import { Session } from 'meteor/session';
 
 import {point_distance, degre_to_alpha, radian_to_degre, check_equality, isUndefined, isDefined, float2} from './tools.js';
 
@@ -442,19 +443,23 @@ Meteor.methods({
             // console.log('user_frame:');
              console.log(user_frame);
 
+             Session.set('user_frame', user_frame);
+
             // console.log('geometry: ' + user_frame.geometry_to_string());
 
-            const res = top_frame(frame_list, user_frame, saddle_height, saddle_fore_aft, '', '', '', undefined);
+            const top_frames = top_frame(frame_list, user_frame, saddle_height, saddle_fore_aft, '', '', '', undefined);
+            Session.set('top_frames', top_frames);
+
             const number = 20;
             console.log('Top ' + number);
             for (let i = 0; i < number; i++) {
-                let f = res[i].frame;
-                console.log('%s.  %s %s %s (%f)', i+1, f.brand, f.model, f.size, res[i].distance);
+                let f = top_frames[i].frame;
+                console.log('%s.  %s %s %s (%f)', i+1, f.brand, f.model, f.size, top_frames[i].distance);
             }
 
             for (let i = 0; i < number; i++) {
-                console.log('\ndistance = %f', float2(res[i].distance));
-                res[i].frame.display();
+                console.log('\ndistance = %f', float2(top_frames[i].distance));
+                top_frames[i].frame.display();
             }
 
         }

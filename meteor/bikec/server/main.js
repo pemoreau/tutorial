@@ -1,4 +1,4 @@
-// import { Frames } from '../imports/api/frames.js';
 
+// Load frames collection on the server
 import '../imports/api/frames.js';
 
