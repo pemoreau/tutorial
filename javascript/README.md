@@ -101,7 +101,7 @@ Infinity
 	}
 	```
 	
-* `let` déclare une variable locallement à un block :
+* `let` déclare une variable localement à un block :
 
 	```js
 	function f() {
