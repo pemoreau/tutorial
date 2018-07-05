@@ -88,4 +88,17 @@ Infinity
 
 * Symbol (new in ECMAScript 6)
 
+  `Symbol()` créé un symbole unique
+
 * Objects
+
+  `{}` pour créer un object vide. C'est équivalenet à `new Object()`   
+  `Object.create(o)` créé un objet ayant `o` pour prototype
+
+* Prototype
+  [chain](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Inheritance_and_the_prototype_chain)
+  
+* this
+  [binding](http://blog.iangilman.com/2015/02/self-this.html)
+  
+* Promise
