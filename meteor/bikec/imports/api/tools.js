@@ -36,4 +36,4 @@ const isDefined = function (x) {
 
 const float2 = function(x) {
     return Math.floor(x*100)/100;
-}
+};
