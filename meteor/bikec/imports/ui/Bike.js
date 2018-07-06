@@ -7,7 +7,7 @@ export default class Bike extends Component {
         function formatBike(brand, model, size, year, distance) {
             let res = brand + ' ' + model + ' Size ' + size + (!!year ? ' (' + year + ')' : '');
             if (isDefined(distance)) {
-                res = res + 'Score: ' + Math.floor(100*(1-distance)) +'%';
+                res = res + ' Score: ' + Math.floor(100*(1-distance)) +'%';
             }
             return res;
         }
