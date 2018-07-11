@@ -1,6 +1,10 @@
 import React, { Component } from 'react'
 import Downshift from 'downshift';
 
+/**
+ * see https://codesandbox.io/s/jRLKrxwgl
+ */
+
 export default class DownshiftBike extends Component {
     constructor(props) {
         super(props);
