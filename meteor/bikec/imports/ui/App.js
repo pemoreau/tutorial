@@ -1,48 +1,31 @@
 import React, { Component } from 'react';
 
 import { withTracker } from 'meteor/react-meteor-data';
-import { Frames } from '../api/frames.js';
 
 import Bike from './Bike.js';
-import {isUndefined} from "../api/tools";
+
+import { UiState } from './ui-state.js';
+
+import { isUndefined, isDefined } from "../api/tools";
+import { findField } from "../api/frames";
+
 import {Session} from "meteor/session";
+
+import DownshiftBike from "./DownshiftBike";
+import {Meteor} from "meteor/meteor";
+
+/**
+ * uiState store information of the UI
+ * such as selectedItem, selectedModel, etc.
+ * @type {UiState}
+ */
+const uiState = new UiState();
 
 // App component - represents the whole app
 class App extends Component {
 
-    // getBikes() {
-    //     return [
-    //         { _id: 1, brand: 'This is task 1' },
-    //         { _id: 2, brand: 'This is task 2' },
-    //         { _id: 3, brand: 'This is task 3' },
-    //     ];
-    // }
-
-    renderSelectedBike() {
-        if (isUndefined(this.props.selected_bike)) {
-            return (
-                <li>No selected bike</li>
-            );
-        } else {
-            return (
-                <Bike key={this.props.selected_bike._id} bike={this.props.selected_bike}/>
-            );
-        }
-    }
-
-    renderBikes() {
-        return this.props.top_bikes.map((b) => (
-            <Bike key={b._id} bike={b} />
-        ));
-    }
-
-    renderTopBikes() {
-        return this.props.top_bikes.map((pair) => (
-            <Bike key={pair.frame._id} bike={pair.frame} distance={pair.distance} />
-        ));
-    }
-
     render() {
+
         return (
 
             <div className="container">
@@ -53,17 +36,40 @@ class App extends Component {
                 <h3>This web site will help you to find a bike similar to yours!</h3>
 
                 <h3>Select your bike</h3>
+                <DownshiftBike field={'brand'}
+                             getItems={() => findField({},'brand')}
+                             setSelected={(item) => uiState.setBrand(item)}/>
+                <DownshiftBike field={'model'}
+                             getItems={() => findField({brand:uiState.getBrand()},'model')}
+                             setSelected={(item) => uiState.setModel(item)}/>
+                <DownshiftBike field={'size'}
+                             getItems={() => findField({brand:uiState.getBrand(), model:uiState.getModel()},'size')}
+                             setSelected={(item) => uiState.setSize(item)}/>
+                <DownshiftBike field={'year'}
+                             getItems={() => findField({brand:uiState.getBrand(), model:uiState.getModel(), size:uiState.getSize()},'year')}
+                             setSelected={(item) => uiState.setYear(item)}/>
+
+                <br/>
+                <button onClick={() => Meteor.call('frames.find',
+                    uiState.getBrand(),
+                    uiState.getModel(),
+                    uiState.getSize(),
+                    uiState.getYear())}>Run Comparator</button>
 
                 <h3>Selected bike</h3>
                 <ul>
-                    {this.renderSelectedBike()}
+                    {isUndefined(this.props.selected_bike) ?
+                        (<li>No selected bike</li>) :
+                        (<Bike key={this.props.selected_bike._id} bike={this.props.selected_bike}/>)}
                 </ul>
 
                 <h3>Top bikes</h3>
                 <ul>
-                    {/*{this.renderBikes()}*/}
-                    {this.renderTopBikes()}
+                    {this.props.top_bikes.map((pair) => (
+                        <Bike key={pair.frame._id} bike={pair.frame} distance={pair.distance} />
+                    ))}
                 </ul>
+
             </div>
         );
     }

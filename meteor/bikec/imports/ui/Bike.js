@@ -5,11 +5,11 @@ import { isUndefined, isDefined } from '../api/tools.js';
 export default class Bike extends Component {
     render() {
         function formatBike(brand, model, size, year, distance) {
-            let res = brand + ' ' + model + ' Size ' + size + (!!year ? ' (' + year + ')' : '');
-            if (isDefined(distance)) {
-                res = res + ' Score: ' + Math.floor(100*(1-distance)) +'%';
-            }
-            return res;
+            return brand
+                + ' ' + model
+                + ' Size ' + size
+                + (!!year ? ' (' + year + ')' : '')
+                + (isDefined(distance) && ' Score: ' + Math.floor(100*(1-distance)) +'%');
         }
 
         return (

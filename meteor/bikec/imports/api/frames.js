@@ -4,8 +4,26 @@ import { check } from "meteor/check";
 import { Session } from 'meteor/session';
 
 import {point_distance, degre_to_alpha, radian_to_degre, check_equality, isUndefined, isDefined, float2} from './tools.js';
+export { Frames, findField };
 
-export const Frames = new Mongo.Collection('frames');
+import { uniq } from 'lodash';
+
+// Load the full build.
+const _ = require('lodash');
+
+const Frames = new Mongo.Collection('frames');
+
+/**
+ * keys is a list of key:value
+ * select keys in Frames and project on field
+ * returns a list of unique values
+ * example: findField({ brand:'Time' }, 'model')
+ * returns a list of 'model' (each model appears only once) for the brand 'Time'
+ */
+const findField = function(keys,field) {
+    const res = Frames.find(keys).map(function(entry) {return entry[field];});
+    return _.uniq(res);
+};
 
 const convert_field = function(field) {
     if(field === 'None' || isUndefined(field)) {

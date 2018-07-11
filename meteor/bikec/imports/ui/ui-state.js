@@ -2,23 +2,19 @@ import { Session } from 'meteor/session';
 
 export class UiState {
     constructor() {
-        this.brand = undefined;
-        this.model = undefined;
-        this.size = undefined;
-        this.year = undefined;
+        // this.brand = undefined;
+        // this.model = undefined;
+        // this.size = undefined;
+        // this.year = undefined;
     }
 
-    //PEM: why should I use Session ?
+    //PEM: we use Session to automatically refresh this list of item that depends on getXXX()
 
     getBrand() {
-        //return this.brand;
-        return Session.get("selectedBrand");
+        // return this.brand;
+        console.log('getBrand: ' + Session.get("selectedItem"));
+        return Session.get("selectedItem");
 
-    }
-
-    setBrand(v) {
-        //this.brand = v;
-        Session.set("selectedBrand", v);
     }
 
     getModel() {
@@ -27,20 +23,10 @@ export class UiState {
 
     }
 
-    setModel(v) {
-        //this.model = v;
-        Session.set("selectedModel", v);
-    }
-
     getSize() {
         //return this.size;
         return Session.get("selectedSize");
 
-    }
-
-    setSize(v) {
-        //this.size = v;
-        Session.set("selectedSize", v);
     }
 
     getYear() {
@@ -49,10 +35,48 @@ export class UiState {
 
     }
 
+
+    setBrand(v) {
+        // this.brand = v;
+        console.log('setBrand: ' + v);
+        Session.set("selectedItem", v);
+        Session.set("selectedModel", undefined);
+        Session.set("selectedSize", undefined);
+        Session.set("selectedYear", undefined);
+    }
+
+    setModel(v) {
+        console.log('setModel: ' + v);
+
+        //this.model = v;
+        Session.set("selectedModel", v);
+        Session.set("selectedSize", undefined);
+        Session.set("selectedYear", undefined);
+    }
+
+
+    setSize(v) {
+        console.log('setSize: ' + v);
+
+        //this.size = v;
+        Session.set("selectedSize", v);
+        Session.set("selectedYear", undefined);
+    }
+
     setYear(v) {
+        console.log('setYear: ' + v);
+
         //this.year = v;
         Session.set("selectedYear", v);
     }
 
+    set(name,v) {
+        switch(name) {
+            case 'brand': this.setBrand(v); break;
+            case 'model': this.setModel(v); break;
+            case 'size': this.setSize(v); break;
+            case 'year': this.setYear(v); break;
+        }
+    }
 
 }

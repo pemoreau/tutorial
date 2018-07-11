@@ -4,38 +4,21 @@ import { render } from 'react-dom';
 import { renderRoutes } from '../imports/startup/client/routes.js';
 
 import { Template } from 'meteor/templating';
-import { Frames } from '../imports/api/frames.js';
+import { findField } from '../imports/api/frames.js';
 import { UiState } from '../imports/ui/ui-state.js';
 
 import { isUndefined } from '../imports/api/tools.js';
 
-import App from '../imports/ui/App.js';
-
 Meteor.startup(() => {
-    // render(<App />, document.getElementById('render-target'));
     render(renderRoutes(), document.getElementById('render-target'));
 });
 
-
 import './main.html';
 
-/**
- * keys is a list of key:value
- * select keys in Frames and project on field
- * returns a list of unique values
- * example: findField({ brand:'Time' }, 'model')
- * returns a list of 'model' (each model appears only once) for the brand 'Time'
- */
-const findField = function(keys,field) {
-    //console.log("findField keys=" + keys + " field=" + field);
-    const res = Frames.find(keys).map(function(entry) {return entry[field];});
-    const set = new Set(res);
-    return [...set];
-};
 
 /**
  * uiState store information of the UI
- * such as selectedBrand, selectedModel, etc.
+ * such as selectedItem, selectedModel, etc.
  * @type {UiState}
  */
 const uiState = new UiState();
@@ -45,7 +28,7 @@ Template.selection.helpers({
 
     brands: function() {
         const res = findField({},'brand');
-        //console.log("brands: " + res);
+        // //console.log("items: " + res);
         return res;
     },
 
@@ -77,7 +60,7 @@ Template.selection.events({
     "change #brand-select": function (event, template) {
         const selected = event.target.value;
         uiState.setBrand(selected);
-        console.log("selectedBrand: " + uiState.getBrand());
+        console.log("selectedItem: " + uiState.getBrand());
     },
     "change #model-select": function (event, template) {
         const selected = event.target.value;
