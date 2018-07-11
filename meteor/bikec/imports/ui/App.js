@@ -82,12 +82,7 @@ export default AppContainer = withTracker(() => {
 
     return {
         selected_bike: Session.get('user_frame'),
-        // top_bikes: top_frames_exists ? top_frames.slice(0, nb_element).map((pair) => (pair.frame)) : [],
         top_bikes: top_frames_exists ? top_frames.slice(0, nb_element) : [],
 
-        // top_bikes: [
-        //     { _id: 1, brand: 'This is task 1' },
-        //     { _id: 2, brand: 'This is task 2' },
-        // ],
     };
 })(App);
