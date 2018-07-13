@@ -79,4 +79,13 @@ export class UiState {
         }
     }
 
+    toJSON() {
+        return {
+            brand: this.getBrand(),
+            model: this.getModel(),
+            size: this.getSize(),
+            year: this.getYear(),
+        };
+    }
+
 }

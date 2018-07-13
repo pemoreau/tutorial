@@ -43,7 +43,7 @@ export default class DownshiftBike extends Component {
                         <label style={{ marginTop: '1rem', display: 'block' }} {...getLabelProps()}>Select a {this.props.field}</label>
                         {/*// add a button for our dropdown and pass the selected book as its content if there's a selected item*/}
                         <button className="dropdown-button" {...getToggleButtonProps()}>
-                            {this.state.selectedItem !== '' ? this.state.selectedItem : 'Select a ' + this.props.field + ' ...'}
+                            {this.getItems().includes(this.state.selectedItem) ? this.state.selectedItem : 'Select a ' + this.props.field + ' ...'}
                         </button>
                         <div style={{ position: 'relative' }}>
                             {/*// if the input element is open, render the div else render nothing*/}

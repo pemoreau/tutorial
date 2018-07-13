@@ -4,7 +4,7 @@ import { check } from "meteor/check";
 import { Session } from 'meteor/session';
 
 import {point_distance, degre_to_alpha, radian_to_degre, check_equality, isUndefined, isDefined, float2} from './tools.js';
-export { Frames, findField };
+export { Frames, findField, findFrame };
 
 import { uniq } from 'lodash';
 
@@ -24,6 +24,11 @@ const findField = function(keys,field) {
     const res = Frames.find(keys).map(function(entry) {return entry[field];});
     return _.uniq(res);
 };
+
+const findFrame = function(brand,model,size,year) {
+    return Frames.findOne({'brand': brand, 'model': model, 'size': size, 'year': year});
+};
+
 
 const convert_field = function(field) {
     if(field === 'None' || isUndefined(field)) {
@@ -421,7 +426,12 @@ const compute_extra_information = function(frame_list, saddle_height, saddle_for
 // dynamically present this list to client
 
 Meteor.methods({
-    'frames.find'(brand,model,size,year) {
+    'frames.find'(jsonUiState) {
+        const brand = jsonUiState.brand;
+        const model = jsonUiState.model;
+        const size = jsonUiState.size;
+        const year = jsonUiState.year;
+
         check(brand, String);
         check(model, String);
         check(size, String);
