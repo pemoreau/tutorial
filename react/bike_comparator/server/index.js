@@ -1,9 +1,7 @@
 
 const express = require("express");
-// var path = require("path");
 const bodyParser = require("body-parser");
 const mongodb = require("mongodb");
-// const ObjectID = mongodb.ObjectID;
 
 const app = express();
 app.use(express.static(__dirname + "/public"));
@@ -59,28 +57,81 @@ const findField = function(keys,field,res) {
     });
 };
 
+
+
+app.use(function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
+
 /*  "/brands"
  *    GET: finds all contacts
  */
-
 app.get("/all", function(req, res) {
-    frames.find({}).toArray(function(err, docs) {
+
+    // if (req.method === 'OPTIONS') {
+    //     res.setHeader('Access-Control-Allow-Origin', '*');
+    //     res.setHeader('Access-Control-Request-Method', '*');
+    //     res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET');
+    //     res.setHeader('Access-Control-Allow-Headers', '*');
+    //     res.writeHead(200);
+    //     res.end();
+    //     return;
+    // }
+    //
+    // res.setHeader('Content-Type', 'application/json; charset=UTF-8');
+
+    // var n = frames.count();
+    // n.then(function(value) {
+    //     console.log(value);
+    // });
+
+    // var result = [];
+    // const all = frames.find({}).forEach( function(elem) {
+    //     const {_id, brand, model, size, year} = elem;
+    //     console.log(_id, brand, model, size, year);
+    //     result.push({_id:_id, brand:brand, model:model, size:size, year:year});
+    // });
+
+    // .map( function(elem) {
+    //     const {_id, brand, model, size, year} = elem;
+    //     return  {_id:_id, brand:brand, model:model, size:size, year:year};
+    // })
+
+    frames
+        .find({})
+        .map( ({_id, brand, model, size, year}) => ({_id:_id, brand:brand, model:model, size:size, year:year}) )
+        .toArray(function(err, docs) {
         if (err) {
             handleError(res, err.message, "Failed to get frames.");
         } else {
+            // console.log(docs);
             res.status(200).json(docs);
-        }
-    });
+        }});
+
+    // res.send(
+    //     JSON.stringify(result));
+        // find({}).toArray(function(err, docs) {
+        // if (err) {
+        //     handleError(res, err.message, "Failed to get frames.");
+        // } else {
+        //     res.status(200).json(docs);
+        // }
+    // });
 });
 
 app.get("/brands", function(req, res) {
     findField({}, 'brand', res);
 });
 
-app.get("/models", function(req, res) {
-    findField({brand:req.param('brand')}, 'model', res);
+// app.get("/models", function(req, res) {
+//     findField({brand:req.param('brand')}, 'model', res);
+// });
+app.get("/models/:brand", function(req, res) {
+    let brand = req.params.brand;
+    findField({brand:brand}, 'model', res);
 });
-
 app.get("/sizes", function(req, res) {
     findField({brand:req.param('brand'), model:req.param('model')}, 'size', res);
 });
