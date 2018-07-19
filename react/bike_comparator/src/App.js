@@ -159,7 +159,7 @@ class App extends Component {
           setSelected={item => this.setState({ selectedSize: item })}
         />
         <DownshiftBike
-          field={"year"}
+          field={'year'}
           getItems={() =>
             selectedBrand && selectedModel && selectedSize
               ? Object.keys(tree[selectedBrand][selectedModel][selectedSize])
