@@ -1,33 +1,31 @@
-import React, { Component } from "react";
-import DownshiftBike from "./DownshiftBike";
-import Bike from "./Bike";
+import React, { Component } from 'react';
+import DownshiftBike from './DownshiftBike';
+import Bike from './Bike';
 
 class App extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      data: [],
+      data: [], // contains the database
       isLoading: false,
       error: null,
 
       tree: {},
-      // mytree: {
-      //     'Time': {
-      //             'NXR': {'XS': {'2011':1, '2010':2},
-      //                     'S': {'2011':3}
-      //             },
-      //             'Skylon': {'XS': {2015:4},
-      //                        'S': {2015:5}
-      //             },
-      //         }
+      // tree has the following form:
+      // tree: {
+      //     'Time': { 'NXR': { 'XS': {'2011':id1, '2010':id2},
+      //                        'S': {'2011':id3} },
+      //               'Skylon': { 'XS': {2015:id4},
+      //                           'S': {2015:id5} },
+      //     },
       // },
 
       selectedBrand: null,
       selectedModel: null,
       selectedSize: null,
       selectedYear: null,
-      selectedBike: null
+      selectedBike: null,
     };
 
     this.componentDidMount = this.componentDidMount.bind(this);
@@ -58,7 +56,7 @@ class App extends Component {
       selectedBrand,
       selectedModel,
       selectedSize,
-      selectedYear
+      selectedYear,
     } = this.state;
     return selectedBrand && selectedModel && selectedSize && selectedYear
       ? Object.keys(
@@ -90,15 +88,13 @@ class App extends Component {
 
     // const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
     // const targetUrl = 'http://localhost:8080/models/Time';
-    const targetUrl = "http://localhost:8080/all";
-
+    const targetUrl = 'http://localhost:8080/all';
     const headers = new Headers();
-    // headers.append('Access-Control-Allow-Origin', '*');
     const options = {
-      method: "GET",
+      method: 'GET',
       headers: headers,
-      mode: "cors",
-      cache: "default"
+      mode: 'cors',
+      cache: 'default',
     };
 
     fetch(targetUrl, options)
@@ -106,15 +102,14 @@ class App extends Component {
         if (response.ok) {
           return response.json();
         } else {
-          throw new Error("Something went wrong ...");
+          throw new Error('Something went wrong ...');
         }
       })
       .then(data => this.setState({ data: data, isLoading: false }))
       .then(() => {
-        // console.log('Init data');
         this.initTree();
       })
-      .catch(error => console.log("Request failed", error));
+      .catch(error => console.log('Request failed', error));
   }
 
   render() {
@@ -124,15 +119,12 @@ class App extends Component {
       selectedModel,
       selectedSize,
       selectedYear,
-      selectedBike
+      selectedBike,
     } = this.state;
     return (
       <div className="container">
         <header>
-          <h1>
-            Welcome to Bike Comparator!<br />
-            (React version)
-          </h1>
+          <h1>Welcome to Bike Comparator!</h1>
         </header>
         <h3>This web site will help you to find a bike similar to yours!</h3>
 
@@ -143,14 +135,14 @@ class App extends Component {
           setSelected={item => this.setState({ selectedBrand: item })}
         />
         <DownshiftBike
-          field={"model"}
+          field={'model'}
           getItems={() =>
             selectedBrand ? Object.keys(tree[selectedBrand]) : []
           }
           setSelected={item => this.setState({ selectedModel: item })}
         />
         <DownshiftBike
-          field={"size"}
+          field={'size'}
           getItems={() =>
             selectedBrand && selectedModel
               ? Object.keys(tree[selectedBrand][selectedModel])
