@@ -1,128 +1,45 @@
 import React, { Component } from 'react';
 import DownshiftBike from './DownshiftBike';
 import Bike from './Bike';
+import FrameDB from './FrameDB';
 
 class App extends Component {
-  constructor(props) {
+  constructor (props) {
     super(props);
 
     this.state = {
-      data: [], // contains the database
+      frameDB: new FrameDB(),
       isLoading: false,
       error: null,
-
-      tree: {},
-      // tree has the following form:
-      // tree: {
-      //     'Time': { 'NXR': { 'XS': {'2011':id1, '2010':id2},
-      //                        'S': {'2011':id3} },
-      //               'Skylon': { 'XS': {2015:id4},
-      //                           'S': {2015:id5} },
-      //     },
-      // },
 
       selectedBrand: null,
       selectedModel: null,
       selectedSize: null,
       selectedYear: null,
-      selectedBike: null,
+      selectedBike: null
     };
 
     this.componentDidMount = this.componentDidMount.bind(this);
   }
 
-  initTree = function() {
-    for (var elem of this.state.data) {
-      const { brand, model, size, year, _id } = elem;
-      if (!this.state.tree[brand]) {
-        this.setState((this.state.tree[brand] = {}));
-      }
-      if (!this.state.tree[brand][model]) {
-        this.state.tree[brand][model] = {};
-      }
-      if (!this.state.tree[brand][model][size]) {
-        this.state.tree[brand][model][size] = {};
-      }
-      if (!this.state.tree[brand][model][size][year]) {
-        this.state.tree[brand][model][size][year] = _id;
-      }
-      // console.log(brand,model,size,year,_id);
-    }
-    // console.log(this.state.tree['Time']);
-  };
-
-  getId = function() {
-    const {
-      selectedBrand,
-      selectedModel,
-      selectedSize,
-      selectedYear,
-    } = this.state;
-    return selectedBrand && selectedModel && selectedSize && selectedYear
-      ? Object.keys(
-          this.state.tree[selectedBrand][selectedModel][selectedSize][
-            selectedYear
-          ]
-        )
-      : [];
-  };
-
-  // initBrands = function() {
-  //     if(this.state.brands.length === 0) {
-  //         const brands = this.state.data.map((x) => x.brand);
-  //         this.setState({brands: _.uniq(brands)});
-  //     }
-  //     console.log('#brands:', this.state.brands.length);
-  // }
-
-  // initModels = function() {
-  //     if(this.state.brands.length === 0) {
-  //         const brands = this.state.data.map((x) => x.brand);
-  //         this.setState({brands: _.uniq(brands)});
-  //     }
-  //     console.log('#brands:', this.state.brands.length);
-  // }
-
-  componentDidMount() {
+  componentDidMount () {
     this.setState({ isLoading: true });
-
-    // const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-    // const targetUrl = 'http://localhost:8080/models/Time';
-    const targetUrl = 'http://localhost:8080/all';
-    const headers = new Headers();
-    const options = {
-      method: 'GET',
-      headers: headers,
-      mode: 'cors',
-      cache: 'default',
-    };
-
-    fetch(targetUrl, options)
-      .then(response => {
-        if (response.ok) {
-          return response.json();
-        } else {
-          throw new Error('Something went wrong ...');
-        }
-      })
-      .then(data => this.setState({ data: data, isLoading: false }))
-      .then(() => {
-        this.initTree();
-      })
-      .catch(error => console.log('Request failed', error));
+    this.state.frameDB.populate();
+    this.setState({ isLoading: false });
   }
 
-  render() {
+  render () {
     const {
-      tree,
+      frameDB,
       selectedBrand,
       selectedModel,
       selectedSize,
       selectedYear,
       selectedBike,
+      sortedFrames
     } = this.state;
     return (
-      <div className="container">
+      <div className='container'>
         <header>
           <h1>Welcome to Bike Comparator!</h1>
         </header>
@@ -130,34 +47,56 @@ class App extends Component {
 
         <h3>Select your bike</h3>
         <DownshiftBike
-          field="brand"
-          getItems={() => Object.keys(tree)}
-          setSelected={item => this.setState({ selectedBrand: item })}
+          field='brand'
+          getItems={() => frameDB.getBrands()}
+          getSelected={() => selectedBrand}
+          setSelected={item =>
+            this.setState({
+              selectedBrand: item,
+              selectedModel: undefined,
+              selectedSize: undefined,
+              selectedYear: undefined
+            })
+          }
         />
         <DownshiftBike
           field={'model'}
           getItems={() =>
-            selectedBrand ? Object.keys(tree[selectedBrand]) : []
+            selectedBrand ? frameDB.getModels(selectedBrand) : []
           }
-          setSelected={item => this.setState({ selectedModel: item })}
+          getSelected={() => selectedModel}
+          setSelected={item =>
+            this.setState({
+              selectedModel: item,
+              selectedSize: undefined,
+              selectedYear: undefined
+            })
+          }
         />
         <DownshiftBike
           field={'size'}
           getItems={() =>
             selectedBrand && selectedModel
-              ? Object.keys(tree[selectedBrand][selectedModel])
+              ? frameDB.getSizes(selectedBrand, selectedModel)
               : []
           }
-          setSelected={item => this.setState({ selectedSize: item })}
+          setSelected={item =>
+            this.setState({
+              selectedSize: item,
+              selectedYear: undefined
+            })
+          }
+          getSelected={() => selectedSize}
         />
         <DownshiftBike
           field={'year'}
           getItems={() =>
             selectedBrand && selectedModel && selectedSize
-              ? Object.keys(tree[selectedBrand][selectedModel][selectedSize])
+              ? frameDB.getYears(selectedBrand, selectedModel, selectedSize)
               : []
           }
           setSelected={item => this.setState({ selectedYear: item })}
+          getSelected={() => selectedYear}
         />
 
         <br />
@@ -165,7 +104,40 @@ class App extends Component {
           disabled={
             !(selectedBrand && selectedModel && selectedSize && selectedYear)
           }
-          onClick={() => true}
+          onClick={() => {
+            const bike = frameDB.getFrame(
+              selectedBrand,
+              selectedModel,
+              selectedSize,
+              selectedYear
+            );
+
+            // bestBike is a list of {frame,distance}
+            const bestBikes = frameDB.getSortedFrames(bike, 10);
+            // normalize distance
+
+            let distances = bestBikes.map(p => p.distance);
+            console.log('distances: ' + distances);
+
+            const maxDistance = Math.max(...bestBikes.map(p => p.distance));
+            console.log('max = ' + maxDistance);
+
+            for (const p of bestBikes) {
+              p.distance = p.distance / (maxDistance === 0 ? 1 : maxDistance);
+            }
+
+            console.log(bestBikes);
+
+            //     maxDistance = maxDistance === 0 ? 1 : maxDistance;
+
+            // }
+
+            console.log(bestBikes);
+            this.setState({
+              selectedBike: bike,
+              sortedFrames: bestBikes
+            });
+          }}
         >
           Run Comparator
         </button>
@@ -178,14 +150,21 @@ class App extends Component {
             <li>No selected bike</li>
           )}
         </ul>
-        {/*
-              <h3>Top bikes</h3>
-              <ul>
-                  {this.props.top_bikes.map((pair) => (
-                      <Bike key={pair.frame._id} bike={pair.frame} distance={pair.distance} />
-                  ))}
-              </ul>
-                */}
+
+        <h3>Top bikes</h3>
+        <ul>
+          {sortedFrames ? (
+            sortedFrames.map(pair => (
+              <Bike
+                key={pair.frame._id}
+                bike={pair.frame}
+                distance={pair.distance}
+              />
+            ))
+          ) : (
+            <li>Select a bike first</li>
+          )}
+        </ul>
       </div>
     );
   }
